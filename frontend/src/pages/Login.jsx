@@ -1,126 +1,133 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { LogIn, QrCode } from 'lucide-react';
-import QRCodeScanner from '../components/QRCodeScanner';
-import api from '../services/api';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { LogIn, QrCode } from "lucide-react";
+import QRCodeScanner from "../components/QRCodeScanner";
+import api from "../services/api";
 
 const Login = () => {
-    const [formData, setFormData] = useState({ username: '', password: '' });
-    const [error, setError] = useState('');
-    const [showQRScanner, setShowQRScanner] = useState(false);
-    const { login } = useAuth();
-    const navigate = useNavigate();
+	const [formData, setFormData] = useState({ username: "", password: "" });
+	const [error, setError] = useState("");
+	const [showQRScanner, setShowQRScanner] = useState(false);
+	const { login } = useAuth();
+	const navigate = useNavigate();
 
-    const searchParams = new URLSearchParams(window.location.search);
-    const redirect = searchParams.get('redirect');
-    const fromTrainers = redirect === '/trainers';
+	const searchParams = new URLSearchParams(window.location.search);
+	const redirect = searchParams.get("redirect");
+	const fromTrainers = redirect === "/trainers";
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        try {
-            await login(formData);
-            navigate(redirect || '/');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Erro ao fazer login');
-        }
-    };
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setError("");
+		try {
+			await login(formData);
+			navigate(redirect || "/");
+		} catch (err) {
+			setError(err.response?.data?.message || "Erro ao fazer login");
+		}
+	};
 
-    const handleQRLogin = async (qrData) => {
-        setError('');
-        console.log('📤 Dados do QR Code:', qrData);
+	const handleQRLogin = async (qrData) => {
+		setError("");
+		console.log("📤 Dados do QR Code:", qrData);
 
-        try {
-            // ✅ Envia userId e secret (não token/user!)
-            const res = await api.post('/auth/login-qr', {
-                userId: qrData.userId,
-                secret: qrData.secret
-            });
+		try {
+			// ✅ Envia userId e secret (não token/user!)
+			const res = await api.post("/auth/login-qr", {
+				userId: qrData.userId,
+				secret: qrData.secret,
+			});
 
-            console.log('✅ Resposta do backend:', res.data);
+			console.log("✅ Resposta do backend:", res.data);
 
-            // ✅ AGORA sim, usa o token/user da resposta
-            await login({ token: res.data.token, user: res.data.user });
-            navigate(redirect || '/');
-        } catch (err) {
-            console.error('❌ Erro login QR:', err.response?.data);
-            setError(err.response?.data?.message || 'QR Code inválido ou expirado');
-        } finally {
-            setShowQRScanner(false);
-        }
-    };
+			// ✅ AGORA sim, usa o token/user da resposta
+			await login({ token: res.data.token, user: res.data.user });
+			navigate(redirect || "/");
+		} catch (err) {
+			console.error("❌ Erro login QR:", err.response?.data);
+			setError(err.response?.data?.message || "QR Code inválido ou expirado");
+		} finally {
+			setShowQRScanner(false);
+		}
+	};
 
-    return (
-        <div className="login-container animate-fade">
-            <div className="glass login-card">
-                <h1>Fitness Platform</h1>
-                <p className="subtitle">Bem-vindo de volta!</p>
+	return (
+		<div className="login-container animate-fade">
+			<div className="glass login-card">
+				<h1>Fitness+</h1>
+				<p className="subtitle">Bem-vindo de volta!</p>
 
-                {fromTrainers && (
-                    <div className="info-banner">
-                        <span>💪</span>
-                        <p>Faça login para enviar o seu pedido ao Personal Trainer</p>
-                    </div>
-                )}
+				{fromTrainers && (
+					<div className="info-banner">
+						<span>💪</span>
+						<p>Faça login para enviar o seu pedido ao Personal Trainer</p>
+					</div>
+				)}
 
-                {error && <div className="error-message">{error}</div>}
+				{error && <div className="error-message">{error}</div>}
 
-                <form onSubmit={handleSubmit}>
-                    <div className="input-group">
-                        <label>Username</label>
-                        <input
-                            type="text"
-                            value={formData.username}
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="input-group">
-                        <label>Senha</label>
-                        <input
-                            type="password"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            required
-                        />
-                    </div>
+				<form onSubmit={handleSubmit}>
+					<div className="input-group">
+						<label>Username</label>
+						<input
+							type="text"
+							value={formData.username}
+							onChange={(e) =>
+								setFormData({ ...formData, username: e.target.value })
+							}
+							required
+						/>
+					</div>
+					<div className="input-group">
+						<label>Senha</label>
+						<input
+							type="password"
+							value={formData.password}
+							onChange={(e) =>
+								setFormData({ ...formData, password: e.target.value })
+							}
+							required
+						/>
+					</div>
 
-                    {/* ✅ Link para Reset Password */}
-                    <div className="forgot-link">
-                        <Link to="/reset-password" className="link-button">
-                            Esqueci-me da password
-                        </Link>
-                    </div>
+					{/* ✅ Link para Reset Password */}
+					<div className="forgot-link">
+						<Link to="/reset-password" className="link-button">
+							Esqueci-me da password
+						</Link>
+					</div>
 
-                    {/* ⚠️ REMOVI O BOTÃO DUPLICADO AQUI - Mantive apenas um */}
-                    <button type="submit" className="btn-primary full-width">
-                        <LogIn size={20} /> Entrar
-                    </button>
+					{/* ⚠️ REMOVI O BOTÃO DUPLICADO AQUI - Mantive apenas um */}
+					<button type="submit" className="btn-primary full-width">
+						<LogIn size={20} /> Entrar
+					</button>
 
-                    {/* ✅ Botão de Login com QR Code */}
-                    <button
-                        type="button"
-                        className="btn-qr full-width"
-                        onClick={() => setShowQRScanner(true)}
-                    >
-                        <QrCode size={20} /> Login com QR Code
-                    </button>
-                </form>
+					{/* ✅ Botão de Login com QR Code */}
+					<button
+						type="button"
+						className="btn-qr full-width"
+						onClick={() => setShowQRScanner(true)}
+					>
+						<QrCode size={20} /> Login com QR Code
+					</button>
+				</form>
 
-                <p className="footer-text">
-                    Não tem uma conta? <Link to={`/register${redirect ? `?redirect=${redirect}` : ''}`}>Registe-se agora</Link>
-                </p>
+				<p className="footer-text">
+					Não tem uma conta?{" "}
+					<Link to={`/register${redirect ? `?redirect=${redirect}` : ""}`}>
+						Registe-se agora
+					</Link>
+				</p>
 
-                {showQRScanner && (
-                    <QRCodeScanner
-                        onScanSuccess={handleQRLogin}
-                        onClose={() => setShowQRScanner(false)}
-                    />
-                )}
-            </div>
+				{showQRScanner && (
+					<QRCodeScanner
+						onScanSuccess={handleQRLogin}
+						onClose={() => setShowQRScanner(false)}
+					/>
+				)}
+			</div>
 
-            <style>{`
+			<style>{`
                 .login-container {
                     display: flex;
                     align-items: center;
@@ -247,8 +254,8 @@ const Login = () => {
                     background: var(--accent-hover);
                 }
             `}</style>
-        </div>
-    );
+		</div>
+	);
 };
 
 export default Login;
